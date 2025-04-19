@@ -235,47 +235,145 @@ with st.container():
 # Tag selection section
 if st.session_state.tags:
     with st.container():
-        st.subheader("Available Tags")
-        st.markdown('<div class="tag-container">', unsafe_allow_html=True)
+        st.subheader("What data would you like to extract?")
         
-        # Create columns for the tags to display in multiple columns
-        cols = st.columns(3)
-        selected_tags = []
+        # Instead of showing tags, ask user what kind of data they want
+        data_categories = [
+            "Page Titles and Headers",
+            "Product Information",
+            "Prices and Costs",
+            "Contact Information",
+            "Links and Navigation",
+            "Article Content",
+            "Custom Query"
+        ]
         
-        # Distribute tags among columns
-        for i, tag in enumerate(st.session_state.tags):
-            col_index = i % 3
-            with cols[col_index]:
-                if st.checkbox(f"<{tag}>", key=f"tag_{tag}"):
-                    selected_tags.append(tag)
+        selected_category = st.selectbox(
+            "Select the type of data you're interested in:",
+            data_categories
+        )
         
-        st.markdown('</div>', unsafe_allow_html=True)
+        # Custom query option
+        if selected_category == "Custom Query":
+            custom_query = st.text_input(
+                "Describe what data you want to extract:",
+                placeholder="E.g., 'product names with prices', 'author names', 'company addresses'"
+            )
         
         # Scrape button
-        if st.button("Scrape Selected Tags"):
-            if not selected_tags:
-                st.warning("Please select at least one tag to scrape.")
-            else:
-                with st.spinner("Scraping data..."):
-                    results = []
+        if st.button("Extract Data"):
+            with st.spinner("Extracting data..."):
+                results = []
+                
+                # Map user-friendly categories to appropriate tags and extraction logic
+                if selected_category == "Page Titles and Headers":
+                    header_tags = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'title']
+                    for tag in header_tags:
+                        if tag in st.session_state.tags:
+                            for el in st.session_state.soup.find_all(tag):
+                                text = el.get_text(strip=True)
+                                if text:
+                                    results.append({"Type": f"Header ({tag})", "Text": text})
+                
+                elif selected_category == "Product Information":
+                    # Look for product-related elements
+                    product_classes = ["product", "item", "goods"]
+                    # Try various product patterns
+                    for el in st.session_state.soup.find_all(class_=lambda c: c and any(p in str(c).lower() for p in product_classes)):
+                        name = el.get_text(strip=True)
+                        if name:
+                            results.append({"Type": "Product", "Text": name})
                     
-                    for tag in selected_tags:
+                    # Also check common product containers
+                    for tag in ['div', 'li', 'article']:
+                        if tag in st.session_state.tags:
+                            for el in st.session_state.soup.find_all(tag):
+                                if el.find('img') and (el.find('h3') or el.find('h2')):
+                                    text = el.get_text(strip=True)
+                                    results.append({"Type": "Product Item", "Text": text[:200]})
+                
+                elif selected_category == "Prices and Costs":
+                    # Price extraction with regex patterns
+                    import re
+                    price_pattern = re.compile(r'(\$|€|£|\¥|USD|EUR)\s?[\d,.]+|\d+(\.\d{2})?(?=\s*(?:\$|€|£|\¥|USD|EUR))')
+                    
+                    for tag in ['span', 'div', 'p', 'strong']:
+                        if tag in st.session_state.tags:
+                            for el in st.session_state.soup.find_all(tag):
+                                text = el.get_text(strip=True)
+                                if price_pattern.search(text):
+                                    results.append({"Type": "Price", "Text": text})
+                
+                elif selected_category == "Contact Information":
+                    # Email regex pattern
+                    import re
+                    email_pattern = re.compile(r'[\w.+-]+@[\w-]+\.[\w.-]+')
+                    phone_pattern = re.compile(r'\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}')
+                    
+                    # Check contact info in various tags
+                    for tag in ['p', 'div', 'span', 'a', 'address']:
+                        if tag in st.session_state.tags:
+                            for el in st.session_state.soup.find_all(tag):
+                                text = el.get_text(strip=True)
+                                if "contact" in text.lower() or email_pattern.search(text) or phone_pattern.search(text):
+                                    results.append({"Type": "Contact", "Text": text})
+                
+                elif selected_category == "Links and Navigation":
+                    # Get links
+                    if 'a' in st.session_state.tags:
+                        for el in st.session_state.soup.find_all('a'):
+                            text = el.get_text(strip=True)
+                            href = el.get('href', '')
+                            if text and href:
+                                results.append({"Type": "Link", "Text": text, "URL": href})
+                
+                elif selected_category == "Article Content":
+                    # Article content typically in p tags, sometimes with article container
+                    article_container = st.session_state.soup.find('article')
+                    
+                    if article_container:
+                        for p in article_container.find_all('p'):
+                            text = p.get_text(strip=True)
+                            if text and len(text) > 15:  # Avoid very short paragraphs
+                                results.append({"Type": "Article Paragraph", "Text": text})
+                    else:
+                        # No article container, look for content in p tags
+                        for p in st.session_state.soup.find_all('p'):
+                            text = p.get_text(strip=True)
+                            if text and len(text) > 30:  # Longer threshold for general p tags
+                                results.append({"Type": "Paragraph", "Text": text})
+                
+                elif selected_category == "Custom Query":
+                    # Handle custom query with intelligent extraction
+                    query_terms = custom_query.lower().split()
+                    
+                    for tag in st.session_state.tags:
                         for el in st.session_state.soup.find_all(tag):
                             text = el.get_text(strip=True)
-                            if text:
-                                results.append({"Tag": tag, "Text": text})
-                    
-                    if not results:
-                        st.warning("No data found for the selected tags.")
-                    else:
+                            if text and any(term in text.lower() for term in query_terms):
+                                results.append({"Type": f"Custom Match ({tag})", "Text": text})
+                
+                if not results:
+                    st.warning("No data found matching your selection. Try another category or custom query.")
+                else:
+                    # Create DataFrame with the results
+                    if selected_category == "Links and Navigation":
                         df = pd.DataFrame(results)
-                        st.session_state.df = df
-                        
-                        # Create reformatted version with tags as columns
-                        original_df, reformatted_df = reformat_for_excel(df)
-                        st.session_state.df_reformatted = reformatted_df
-                        
-                        st.success(f"Successfully scraped {len(results)} items!")
+                    else:
+                        # For other categories, standardize to two columns
+                        df = pd.DataFrame(results)
+                        if "URL" in df.columns:
+                            df = df[["Type", "Text", "URL"]]
+                        else:
+                            df = df[["Type", "Text"]]
+                    
+                    st.session_state.df = df
+                    
+                    # Create reformatted version with types as columns
+                    original_df, reformatted_df = reformat_for_excel(df)
+                    st.session_state.df_reformatted = reformatted_df
+                    
+                    st.success(f"Successfully extracted {len(results)} items!")
 
 # Results display section
 if st.session_state.df is not None and not st.session_state.df.empty:
