@@ -47,7 +47,7 @@ coverage.xml
 .mypy_cache/
 .dmypy.json
 dmypy.json
-
+.env
 # Virtual environments
 venv/
 ENV/
