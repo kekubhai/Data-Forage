@@ -111,12 +111,13 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# Alternate navigation using Streamlit's built-in functionality
+# Add navigation using Streamlit's built-in functionality
 col1, col2 = st.columns([1, 5])
 with col1:
-    if st.button("Switch to AI Chat"):
-        # This will redirect to chat.py
-        st.switch_page("chat.py")
+    # This button is no longer needed with Streamlit's native page navigation
+    # if st.button("Switch to AI Chat"):
+    #     st.switch_page("chat.py")
+    pass
 
 st.markdown('<h1 class="main-header">DataForage Web Scraper</h1>', unsafe_allow_html=True)
 st.markdown('<p class="sub-header">Extract data from any website in seconds</p>', unsafe_allow_html=True)
