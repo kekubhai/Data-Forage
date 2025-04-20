@@ -80,7 +80,35 @@ st.markdown("""
     .dark-mode .format-options {
         background-color: #0f3123;
     }
+    .nav-container {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 2rem;
+        border-bottom: 1px solid #e5e7eb;
+        padding-bottom: 1rem;
+    }
+    .nav-item {
+        padding: 0.5rem 1rem;
+        margin: 0 0.5rem;
+        border-radius: 0.375rem;
+        font-weight: 500;
+    }
+    .nav-item-active {
+        background-color: #10b981;
+        color: white !important;
+    }
+    .nav-item:hover:not(.nav-item-active) {
+        background-color: #f3f4f6;
+    }
 </style>
+""", unsafe_allow_html=True)
+
+# Add navigation menu at the top
+st.markdown("""
+<div class="nav-container">
+    <a href="/" class="nav-item nav-item-active">🔍 Web Scraper</a>
+    <a href="/chat" class="nav-item">💬 AI Chat</a>
+</div>
 """, unsafe_allow_html=True)
 
 st.markdown('<h1 class="main-header">DataForage Web Scraper</h1>', unsafe_allow_html=True)
