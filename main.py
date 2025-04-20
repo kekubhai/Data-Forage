@@ -106,10 +106,17 @@ st.markdown("""
 # Add navigation menu at the top
 st.markdown("""
 <div class="nav-container">
-    <a href="/" class="nav-item nav-item-active">🔍 Web Scraper</a>
-    <a href="/chat" class="nav-item">💬 AI Chat</a>
+    <a href="main.py" class="nav-item nav-item-active">🔍 Web Scraper</a>
+    <a href="chat.py" class="nav-item">💬 AI Chat</a>
 </div>
 """, unsafe_allow_html=True)
+
+# Alternate navigation using Streamlit's built-in functionality
+col1, col2 = st.columns([1, 5])
+with col1:
+    if st.button("Switch to AI Chat"):
+        # This will redirect to chat.py
+        st.switch_page("chat.py")
 
 st.markdown('<h1 class="main-header">DataForage Web Scraper</h1>', unsafe_allow_html=True)
 st.markdown('<p class="sub-header">Extract data from any website in seconds</p>', unsafe_allow_html=True)
