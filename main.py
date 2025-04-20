@@ -9,6 +9,8 @@ import os
 from dotenv import load_dotenv
 import numpy as np
 from collections import defaultdict
+import random
+from urllib.parse import urlparse, urljoin
 
 # Load environment variables
 load_dotenv()
@@ -204,19 +206,79 @@ if 'soup' not in st.session_state:
 if 'insights' not in st.session_state:
     st.session_state.insights = ""
 
-# URL input section
+# After URL input section, add pagination and proxy options
 with st.container():
     url = st.text_input("Enter the URL to scrape:", value=st.session_state.url)
+    
+    # Advanced options in an expandable section
+    with st.expander("Advanced Scraping Options"):
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            enable_pagination = st.checkbox("Enable pagination", value=False, 
+                                          help="Scrape multiple pages by automatically detecting and following 'next page' links")
+            if enable_pagination:
+                max_pages = st.slider("Maximum pages to scrape", min_value=1, max_value=10, value=3,
+                                     help="Limit the number of pages to prevent long-running scrapes")
+        
+        with col2:
+            use_proxy = st.checkbox("Use proxy servers", value=False,
+                                  help="Route requests through proxy servers to avoid detection or IP blocking")
+            if use_proxy:
+                proxy_option = st.radio("Proxy source:", ["Default proxies", "Custom proxies"])
+                if proxy_option == "Custom proxies":
+                    custom_proxies = st.text_area("Enter proxy servers (one per line, format: http://ip:port)",
+                                                placeholder="http://103.152.112.162:80\nhttp://193.239.86.249:3128")
+                    if custom_proxies:
+                        proxies = [p.strip() for p in custom_proxies.split("\n") if p.strip()]
+                    else:
+                        proxies = []
+                else:
+                    proxies = ["http://103.152.112.162:80", "http://193.239.86.249:3128", "http://159.65.77.168:8585"]
+        
+        # Add user agent rotation option
+        rotate_user_agents = st.checkbox("Rotate user agents", value=True,
+                                      help="Cycle through different browser user-agents to avoid detection")
+    
     analyze_button = st.button("Analyze Page")
 
     if analyze_button and url:
         st.session_state.url = url
         with st.spinner("Analyzing website..."):
             try:
-                headers = {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36'
+                # Store options in session state
+                st.session_state.pagination = {
+                    "enabled": enable_pagination,
+                    "max_pages": max_pages if enable_pagination else 1
                 }
-                response = requests.get(url, headers=headers)
+                
+                st.session_state.proxy = {
+                    "enabled": use_proxy,
+                    "proxies": proxies if use_proxy else []
+                }
+                
+                st.session_state.user_agents = {
+                    "rotate": rotate_user_agents,
+                    "agents": [
+                        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36',
+                        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15',
+                        'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:125.0) Gecko/20100101 Firefox/125.0'
+                    ]
+                }
+                
+                # Prepare request headers
+                headers = {
+                    'User-Agent': random.choice(st.session_state.user_agents["agents"]) if rotate_user_agents else 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36'
+                }
+                
+                # Make request with proxy if enabled
+                if use_proxy and proxies:
+                    proxy = random.choice(proxies)
+                    response = requests.get(url, headers=headers, proxies={"http": proxy, "https": proxy}, timeout=10)
+                    st.session_state.used_proxy = proxy
+                else:
+                    response = requests.get(url, headers=headers)
+                    st.session_state.used_proxy = None
                 
                 if response.status_code != 200:
                     st.error(f"Failed to retrieve page. Status code: {response.status_code}")
@@ -228,7 +290,49 @@ with st.container():
                     all_tags = set([tag.name for tag in soup.find_all() if tag.name is not None])
                     st.session_state.tags = sorted(all_tags)
                     
-                    st.success("Website successfully analyzed!")
+                    # Check for pagination if enabled
+                    if enable_pagination:
+                        # Store the current URL for pagination
+                        st.session_state.current_url = url
+                        
+                        # Find potential next page link
+                        next_page_patterns = [
+                            # Text-based patterns
+                            {"element": "a", "text": ["next", "next page", "›", "»", ">"]},
+                            # Class-based patterns
+                            {"element": "a", "class": ["next", "pagination-next", "next-page"]}
+                        ]
+                        
+                        next_page_url = None
+                        base_url = url
+                        parsed_url = urlparse(url)
+                        domain = f"{parsed_url.scheme}://{parsed_url.netloc}"
+                        
+                        # Try to find next page link
+                        for pattern in next_page_patterns:
+                            if "text" in pattern:
+                                for text_pattern in pattern["text"]:
+                                    for link in soup.find_all(pattern["element"]):
+                                        if link.get_text().lower().strip() == text_pattern.lower() and link.has_attr('href'):
+                                            next_page_url = urljoin(base_url, link['href'])
+                                            break
+                            
+                            if "class" in pattern:
+                                for class_pattern in pattern["class"]:
+                                    for link in soup.find_all(pattern["element"], class_=lambda c: c and class_pattern in c.lower()):
+                                        if link.has_attr('href'):
+                                            next_page_url = urljoin(base_url, link['href'])
+                                            break
+                        
+                        # Check if pagination is available
+                        if next_page_url:
+                            st.session_state.pagination["next_url"] = next_page_url
+                            st.success(f"Website successfully analyzed! Pagination detected - up to {max_pages} pages can be scraped.")
+                        else:
+                            st.session_state.pagination["next_url"] = None
+                            st.success("Website successfully analyzed! No pagination links detected.")
+                    else:
+                        st.success("Website successfully analyzed!")
             except Exception as e:
                 st.error(f"Error occurred: {e}")
 
@@ -378,6 +482,20 @@ if st.session_state.tags:
 # Results display section
 if st.session_state.df is not None and not st.session_state.df.empty:
     with st.container():
+        # Above the data display, show scraping statistics
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            st.metric("Items Scraped", len(st.session_state.df))
+        
+        with col2:
+            if hasattr(st.session_state, 'pagination') and st.session_state.pagination.get("enabled"):
+                st.metric("Pages Scraped", st.session_state.pagination.get("pages_scraped", 1))
+        
+        with col3:
+            if hasattr(st.session_state, 'used_proxy') and st.session_state.used_proxy:
+                st.info(f"Used proxy: {st.session_state.used_proxy}")
+        
         st.markdown('<div class="results-container">', unsafe_allow_html=True)
         st.subheader("Scraped Data")
         

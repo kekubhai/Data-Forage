@@ -11,6 +11,7 @@
 DataForage is a powerful web scraping platform that transforms any website into structured data without requiring programming knowledge. The application intelligently identifies content patterns, tables, and lists, allowing you to extract specific types of data with ease.
 
 **Key features:**
+
 - 🔍 **Intelligent Data Detection**: Automatically identifies and categorizes different types of content
 - 📊 **Excel Export**: Download scraped data instantly as formatted Excel spreadsheets
 - 🔄 **JavaScript Support**: Handles modern JS-heavy websites with dynamic content
@@ -27,6 +28,7 @@ The application consists of two main components:
 ## 📋 Requirements
 
 ### Backend
+
 - Python 3.9+
 - FastAPI
 - BeautifulSoup4
@@ -35,6 +37,7 @@ The application consists of two main components:
 - Other dependencies specified in `py-back/requirements.txt`
 
 ### Frontend
+
 - Node.js 18+
 - Next.js 14+
 - TailwindCSS
@@ -45,11 +48,13 @@ The application consists of two main components:
 ### Backend Setup
 
 1. Navigate to the backend directory:
+
    ```
    cd py-back
    ```
 
 2. Create a virtual environment (recommended):
+
    ```
    python -m venv venv
    venv\Scripts\activate  # Windows
@@ -57,11 +62,13 @@ The application consists of two main components:
    ```
 
 3. Install dependencies:
+
    ```
    pip install -r requirements.txt
    ```
 
 4. Optional: Create a `.env` file for API keys:
+
    ```
    GEMINI_API_KEY=your_api_key_here
    ```
@@ -69,11 +76,13 @@ The application consists of two main components:
 ### Frontend Setup
 
 1. Navigate to the frontend directory:
+
    ```
    cd dataforage-frontend
    ```
 
 2. Install dependencies:
+
    ```
    npm install
    ```
@@ -83,12 +92,15 @@ The application consists of two main components:
 ### Start the Backend
 
 1. From the `py-back` directory, run:
+
    ```
    streamlit run main.py
    ```
+
    This will start the Streamlit interface.
 
 2. For the API backend (optional):
+
    ```
    uvicorn api:app --reload
    ```
@@ -96,6 +108,7 @@ The application consists of two main components:
 ### Start the Frontend
 
 1. From the `dataforage-frontend` directory, run:
+
    ```
    npm run dev
    ```
@@ -128,6 +141,7 @@ python py.py
 ```
 
 Follow the prompts to:
+
 1. Enter a URL
 2. View available data examples
 3. Specify the type of data you need
@@ -163,5 +177,5 @@ For support or questions, please open an issue in the GitHub repository.
 ---
 
 <div align="center">
-  Made with ❤️ by DataForage Team
+  Made with ❤️ by RedRanger Team
 </div>
