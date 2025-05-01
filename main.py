@@ -1,7 +1,7 @@
 import streamlit as st
 import requests
 from bs4 import BeautifulSoup
-import pandas as pd
+
 import base64
 import io
 import google.generativeai as genai
