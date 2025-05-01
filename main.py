@@ -28,79 +28,251 @@ st.set_page_config(
 # Header with styling
 st.markdown("""
 <style>
+    /* Global Styles and Variables */
+    :root {
+        --primary-color: #10b981;
+        --primary-dark: #047857;
+        --primary-light: #d1fae5;
+        --secondary-color: #3b82f6;
+        --accent-color: #8b5cf6;
+        --text-color: #1f2937;
+        --text-light: #6b7280;
+        --bg-light: #f9fafb;
+        --bg-dark: #111827;
+        --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+        --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        --rounded-sm: 0.375rem;
+        --rounded-md: 0.5rem;
+        --rounded-lg: 1rem;
+    }
+
+    /* Page Layout Improvements */
+    .block-container {
+        padding-top: 2rem;
+        padding-bottom: 2rem;
+    }
+    
+    /* Brand Header */
     .main-header {
-        font-size: 2.5rem;
-        color: #10b981;
-        font-weight: 700;
-        margin-bottom: 1rem;
+        font-size: 2.75rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 0.5rem;
+        letter-spacing: -0.025em;
+        line-height: 1.1;
     }
+    
     .sub-header {
-        font-size: 1.2rem;
-        color: #6b7280;
-        margin-bottom: 2rem;
+        font-size: 1.25rem;
+        color: var(--text-light);
+        margin-bottom: 2.5rem;
+        font-weight: 400;
     }
+    
+    /* Input Elements Styling */
+    .stTextInput input, .stTextArea textarea {
+        border: 1px solid #e5e7eb;
+        border-radius: var(--rounded-md);
+        padding: 0.75rem 1rem;
+        font-size: 1rem;
+        transition: all 0.2s ease;
+        box-shadow: var(--shadow-sm);
+    }
+    
+    .stTextInput input:focus, .stTextArea textarea:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+    }
+    
+    /* Button Styling */
     .stButton button {
-        background-color: #10b981;
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+        border: none;
         color: white;
-        font-weight: bold;
+        font-weight: 600;
+        padding: 0.625rem 1.5rem;
+        border-radius: var(--rounded-md);
+        box-shadow: var(--shadow-md);
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
     }
+    
     .stButton button:hover {
-        background-color: #047857;
+        background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-color) 100%);
+        box-shadow: var(--shadow-lg);
+        transform: translateY(-1px);
     }
+    
+    .stButton button:active {
+        transform: translateY(1px);
+        box-shadow: var(--shadow-sm);
+    }
+    
+    /* Tag container */
     .tag-container {
         max-height: 300px;
         overflow-y: auto;
-        border: 1px solid #d1d5db;
-        border-radius: 5px;
-        padding: 10px;
-        margin-bottom: 20px;
+        border: 1px solid #e5e7eb;
+        border-radius: var(--rounded-lg);
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+        box-shadow: var(--shadow-sm);
     }
+    
+    /* Results container */
     .results-container {
-        margin-top: 2rem;
-        border-top: 1px solid #d1d5db;
+        margin-top: 2.5rem;
+        border-top: 1px solid #e5e7eb;
         padding-top: 2rem;
     }
+    
+    /* Insight container */
     .insight-container {
-        background-color: #f8fafc;
-        border-left: 4px solid #10b981;
-        padding: 16px;
-        border-radius: 4px;
-        margin: 20px 0;
+        background: linear-gradient(to right, #f0fdf4, white);
+        border-left: 6px solid var(--primary-color);
+        border-radius: var(--rounded-md);
+        padding: 1.5rem;
+        margin: 1.5rem 0;
+        box-shadow: var(--shadow-md);
     }
-    .dark-mode .insight-container {
-        background-color: #1e293b;
-        border-left: 4px solid #10b981;
-    }
+    
+    /* Format options */
     .format-options {
-        background-color: #f0fdf4;
-        border-radius: 8px;
-        padding: 16px;
-        margin: 16px 0;
+        background-color: #f9fafb;
+        border: 1px solid #e5e7eb;
+        border-radius: var(--rounded-md);
+        padding: 1.25rem;
+        margin: 1.5rem 0;
+        box-shadow: var(--shadow-sm);
     }
-    .dark-mode .format-options {
-        background-color: #0f3123;
+    
+    /* Select box styling */
+    .stSelectbox div[data-baseweb="select"] > div {
+        border-radius: var(--rounded-md);
+        border-color: #e5e7eb;
+        transition: all 0.2s;
     }
-    .nav-container {
-        display: flex;
-        justify-content: center;
-        margin-bottom: 2rem;
-        border-bottom: 1px solid #e5e7eb;
-        padding-bottom: 1rem;
+    
+    .stSelectbox div[data-baseweb="select"] > div:hover {
+        border-color: var(--primary-color);
     }
-    .nav-item {
+    
+    /* Checkbox styling */
+    .stCheckbox label span[aria-hidden="true"] div::after {
+        border-color: var(--primary-color) !important;
+    }
+    
+    /* Metric Styling */
+    div[data-testid="stMetricValue"] {
+        font-size: 2rem !important;
+        color: var(--primary-color) !important;
+        font-weight: 700 !important;
+    }
+    
+    div[data-testid="stMetricLabel"] {
+        font-weight: 500 !important;
+    }
+    
+    div[data-testid="stMetricDelta"] {
+        font-size: 0.875rem !important;
+    }
+    
+    /* Expander styling */
+    .streamlit-expanderHeader {
+        font-weight: 600;
+        color: var(--text-color);
+        background-color: #f9fafb;
+        border-radius: var(--rounded-md);
         padding: 0.5rem 1rem;
-        margin: 0 0.5rem;
-        border-radius: 0.375rem;
+    }
+    
+    .streamlit-expanderHeader:hover {
+        color: var(--primary-color);
+    }
+    
+    /* Table/DataFrame Styling */
+    [data-testid="stDataFrame"] table {
+        border-collapse: collapse;
+        width: 100%;
+    }
+    
+    [data-testid="stDataFrame"] th {
+        background: linear-gradient(to right, var(--primary-color), var(--primary-dark));
+        color: white !important;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.8rem;
+        letter-spacing: 0.05em;
+        text-align: center;
+        padding: 0.75rem 1rem;
+    }
+    
+    [data-testid="stDataFrame"] td {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid #e5e7eb;
+        font-size: 0.95rem;
+    }
+    
+    [data-testid="stDataFrame"] tr:nth-child(even) td {
+        background-color: #f9fafb;
+    }
+    
+    [data-testid="stDataFrame"] tr:hover td {
+        background-color: #f0fdf4;
+    }
+    
+    /* Footer styling */
+    footer {
+        margin-top: 3rem;
+        padding-top: 1.25rem;
+        border-top: 1px solid #e5e7eb;
+        text-align: center;
+        color: var(--text-light);
+        font-size: 0.9rem;
+    }
+    
+    footer a {
+        color: var(--primary-color);
+        text-decoration: none;
         font-weight: 500;
     }
-    .nav-item-active {
-        background-color: #10b981;
-        color: white !important;
+    
+    footer a:hover {
+        text-decoration: underline;
     }
-    .nav-item:hover:not(.nav-item-active) {
-        background-color: #f3f4f6;
+    
+    /* Dark Mode Support */
+    @media (prefers-color-scheme: dark) {
+        .format-options, .streamlit-expanderHeader {
+            background-color: #1f2937;
+        }
+        
+        [data-testid="stDataFrame"] tr:nth-child(even) td {
+            background-color: #1f2937;
+        }
+        
+        [data-testid="stDataFrame"] tr:hover td {
+            background-color: #374151;
+        }
+        
+        .insight-container {
+            background: linear-gradient(to right, #065f46, #1f2937);
+            color: #d1fae5;
+        }
     }
 </style>
+""", unsafe_allow_html=True)
+
+# Create app header with improved styling
+st.markdown("""
+<div style="text-align:center; padding: 2rem 0 1rem; margin-bottom: 2rem;">
+    <h1 class="main-header">DataForage Web Scraper</h1>
+    <p class="sub-header">Turn any website into structured data in seconds</p>
+</div>
 """, unsafe_allow_html=True)
 
 # Add navigation menu at the top

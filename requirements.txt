@@ -8,9 +8,6 @@ lxml==4.9.3
 html5lib==1.1
 python-multipart==0.0.6
 streamlit 
-langchain 
-langchain_ollama
-selenium
 beautifulsoup4
 lxml 
 html5lib

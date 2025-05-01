@@ -228,6 +228,7 @@ if st.session_state.gemini_key_set:
                     
                     try:
                         # Initialize Gemini API
+                        model = genai.GenerativeModel('gemini-2.0-flash')
                         api_key = os.getenv("GEMINI_API_KEY")
                         client = genai.Client(api_key=api_key)
                         
